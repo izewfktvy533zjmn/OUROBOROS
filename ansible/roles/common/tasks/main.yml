@@ -1,0 +1,87 @@
+- name: Docker and Kubernetes installed
+  hosts: all
+  become: yes
+  vars_files:
+  - ../vars/main.yml
+
+
+
+  tasks:
+  - name: apt update
+    apt:
+      update_cache: yes
+  
+  - name: Install libltdl7
+    apt:
+      name: 
+      - libltdl7
+  
+  - name: Download containerd.io deb package
+    get_url:
+      url={{ deb_package_url['container_io'] }} dest=/tmp/containerd.io.deb force=yes
+
+  - name: Download docker-ce-cli deb package
+    get_url:
+      url={{ deb_package_url['docker_ce_cli'] }} dest=/tmp/docker-ce-cli.deb force=yes
+
+  - name: Download docker-ce deb package
+    get_url:
+      url={{ deb_package_url['docker_ce'] }} dest=/tmp/docker-ce.deb force=yes
+
+  - name: Install containerd.io deb package
+    apt:
+      deb: /tmp/containerd.io.deb
+
+  - name: Install docker-ce-cli deb package
+    apt:
+      deb: /tmp/docker-ce-cli.deb
+
+  - name: Install docker-ce deb package
+    apt:
+      deb: /tmp/docker-ce.deb
+
+  - name: Add ubuntu user to docker group
+    user:
+      name={{ ansible_user }} groups=docker
+  
+  - name: Add the packages.cloud.google.com atp key
+    apt_key:
+      url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+  
+  - name: Add url to apt sources list
+    shell: echo "deb http://apt.kubernetes.io/ kubernetes-xenial main" | tee /etc/apt/sources.list.d/kubernetes.list
+    args:
+      creates: /etc/apt/sources.list.d/kubernetes.list
+
+  - name: apt update 
+    apt:
+      update_cache: yes
+
+  - name: Install kebelet, kubeadm and kubectl
+    apt:
+      name:
+      - kubelet=1.18.5-00
+      - kubeadm=1.18.5-00
+      - kubectl=1.18.5-00
+
+  - name: Restart kubelet
+    systemd:
+      state: restarted
+      daemon_reload: yes
+      name: kubelet
+
+  - name: Hold kubelet, kubeadm and kubectl from being upgraded
+    shell: apt-mark hold kubelet kubeadm kubectl 
+
+  - name: reboot
+    shell: "sleep 3 && reboot"
+    async: 1
+    poll: 0
+
+  - name: wait for reboot
+    wait_for_connection:
+      delay: 10
+      timeout: 180
+
+  - name: connect check
+    ping:

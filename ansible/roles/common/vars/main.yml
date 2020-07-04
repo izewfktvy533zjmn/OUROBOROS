@@ -1,0 +1,4 @@
+deb_package_url:
+  container_io: https://download.docker.com/linux/debian/dists/buster/pool/stable/arm64/containerd.io_1.2.10-3_arm64.deb
+  docker_ce_cli: https://download.docker.com/linux/debian/dists/buster/pool/stable/arm64/docker-ce-cli_19.03.8~3-0~debian-buster_arm64.deb 
+  docker_ce: https://download.docker.com/linux/debian/dists/buster/pool/stable/arm64/docker-ce_19.03.8~3-0~debian-buster_arm64.deb
