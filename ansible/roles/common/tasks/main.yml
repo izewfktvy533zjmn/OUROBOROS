@@ -7,43 +7,35 @@
 
 
   tasks:
-  - name: apt update
-    apt:
-      update_cache: yes
-  
-  - name: Install libltdl7
-    apt:
-      name: 
-      - libltdl7
-  
   - name: Download containerd.io deb package
     get_url:
-      url={{ deb_package_url['container_io'] }} dest=/tmp/containerd.io.deb force=yes
+      url={{ deb_package_url['container_io'] }} dest=/var/cache/apt/archives/containerd.io.deb force=no
 
   - name: Download docker-ce-cli deb package
     get_url:
-      url={{ deb_package_url['docker_ce_cli'] }} dest=/tmp/docker-ce-cli.deb force=yes
+      url={{ deb_package_url['docker_ce_cli'] }} dest=/var/cache/apt/archives/docker-ce-cli.deb force=no
 
   - name: Download docker-ce deb package
     get_url:
-      url={{ deb_package_url['docker_ce'] }} dest=/tmp/docker-ce.deb force=yes
+      url={{ deb_package_url['docker_ce'] }} dest=/var/cache/apt/archives/docker-ce.deb force=no
 
   - name: Install containerd.io deb package
     apt:
-      deb: /tmp/containerd.io.deb
+      deb: /var/cache/apt/archives/containerd.io.deb
 
   - name: Install docker-ce-cli deb package
     apt:
-      deb: /tmp/docker-ce-cli.deb
+      deb: /var/cache/apt/archives/docker-ce-cli.deb
 
   - name: Install docker-ce deb package
     apt:
-      deb: /tmp/docker-ce.deb
+      deb: /var/cache/apt/archives/docker-ce.deb
 
   - name: Add ubuntu user to docker group
     user:
       name={{ ansible_user }} groups=docker
-  
+    register: task_result
+
   - name: Add the packages.cloud.google.com atp key
     apt_key:
       url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
@@ -55,7 +47,12 @@
 
   - name: apt update 
     apt:
-      update_cache: yes
+      update_cache: no
+
+  - name: Install libltdl7
+    apt:
+      name: 
+      - libltdl7
 
   - name: Install kebelet, kubeadm and kubectl
     apt:
@@ -64,24 +61,18 @@
       - kubeadm=1.18.5-00
       - kubectl=1.18.5-00
 
-  - name: Restart kubelet
-    systemd:
-      state: restarted
-      daemon_reload: yes
-      name: kubelet
-
-  - name: Hold kubelet, kubeadm and kubectl from being upgraded
-    shell: apt-mark hold kubelet kubeadm kubectl 
-
-  - name: reboot
+  - name: Reboot if these tasks were done for the first time
     shell: "sleep 3 && reboot"
     async: 1
     poll: 0
-
-  - name: wait for reboot
+    when: task_result is changed 
+  
+  - name: Wait for reboot
     wait_for_connection:
-      delay: 10
+      delay: 0
       timeout: 180
+    when: task_result is changed 
 
-  - name: connect check
+  - name: Check Connection after rebooting
     ping:
+    when: task_result is changed 
