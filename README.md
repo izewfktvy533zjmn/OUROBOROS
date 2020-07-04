@@ -39,4 +39,18 @@
 
 ![Ouroboros](/images/ouroboros.png)
 
+
+
+```
+$ ansible --version
+ansible 2.5.1
+  config file = /etc/ansible/ansible.cfg
+  configured module search path = [u'/home/taichi/.ansible/plugins/modules', u'/usr/share/ansible/plugins/modules']
+  ansible python module location = /usr/lib/python2.7/dist-packages/ansible
+  executable location = /usr/bin/ansible
+  python version = 2.7.17 (default, Apr 15 2020, 17:20:14) [GCC 7.5.0]
+```
+
+
+
 &nbsp;
